@@ -1,9 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import DashboardCard from "@/components/dashboard/DashboardCard";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, MessageSquare, BookOpen, FileText, ArrowRight } from "lucide-react";
+import { PlusCircle, MessageSquare, BookOpen, FileText, ArrowRight, UploadCloud, File, Loader2 } from "lucide-react";
+import { useDocuments } from "@/hooks/useDocuments";
 
 export default function DashboardPage() {
+  const { documents, isLoading } = useDocuments({ limit: 3, sort_by: "created_at", sort_order: "desc" });
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Header */}
@@ -50,9 +63,54 @@ export default function DashboardPage() {
               </Link>
             </div>
           </DashboardCard>
-          <DashboardCard title="Recent Documents">
-            <p className="text-muted-foreground">No documents uploaded yet.</p>
-          </DashboardCard>
+
+          {/* Interactive Recent Documents Card */}
+          <Link href="/documents" className="block group">
+            <DashboardCard
+              title="Recent Documents"
+              description="Click to open Knowledge Base & document manager"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center py-4 text-muted-foreground">
+                  <Loader2 className="size-5 animate-spin mr-2 text-primary" />
+                  <span className="text-xs">Loading documents...</span>
+                </div>
+              ) : documents.length > 0 ? (
+                <div className="space-y-2.5">
+                  {documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between p-2.5 rounded-xl border border-white/5 bg-white/[0.02] group-hover:bg-white/[0.05] transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 truncate">
+                        <File className="size-4 text-primary shrink-0" />
+                        <div className="truncate">
+                          <p className="text-xs font-semibold text-foreground truncate">{doc.filename}</p>
+                          <p className="text-[10px] text-muted-foreground">{formatBytes(doc.size_bytes)}</p>
+                        </div>
+                      </div>
+                      <ArrowRight className="size-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  ))}
+                  <div className="pt-1 flex items-center justify-between text-xs font-medium text-primary">
+                    <span>Manage all documents</span>
+                    <ArrowRight className="size-3.5" />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">No documents uploaded yet.</p>
+                  <Button variant="outline" size="sm" className="w-full justify-between text-xs group-hover:border-primary/50 group-hover:text-primary transition-all">
+                    <span className="flex items-center gap-1.5">
+                      <UploadCloud className="size-3.5" />
+                      Upload & Manage Documents
+                    </span>
+                    <ArrowRight className="size-3.5" />
+                  </Button>
+                </div>
+              )}
+            </DashboardCard>
+          </Link>
         </div>
       </div>
     </div>
