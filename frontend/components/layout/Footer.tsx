@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import Container from "@/components/layout/Container";
@@ -22,9 +23,13 @@ export default function Footer() {
         <div className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-2">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-primary/15 text-base ring-1 ring-primary/25">
-                🔮
-              </span>
+              <Image
+                src="/logo.png"
+                alt="JyotishAI Logo"
+                width={36}
+                height={36}
+                className="rounded-xl object-contain ring-1 ring-primary/20"
+              />
               <span className="text-lg font-bold tracking-tight text-foreground">
                 JyotishAI
               </span>

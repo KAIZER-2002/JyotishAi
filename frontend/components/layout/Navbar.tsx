@@ -51,11 +51,10 @@ export default function Navbar() {
                 <Image
                   src="/logo.png"
                   alt="JyotishAI Logo"
-                  width={130}
-                  height={130}
-                  className="rounded-xl"
+                  width={38}
+                  height={38}
+                  className="rounded-xl object-contain ring-1 ring-primary/20"
                   priority
-                  unoptimized
                 />
                 <span className="text-xl font-bold tracking-tight text-foreground">
                   JyotishAI
@@ -113,10 +112,9 @@ export default function Navbar() {
               <Image
                 src="/logo.png"
                 alt="JyotishAI Logo"
-                width={40}
-                height={40}
-                className="rounded-xl"
-                unoptimized
+                width={36}
+                height={36}
+                className="rounded-xl object-contain ring-1 ring-primary/20"
               />
               <span className="text-lg font-bold tracking-tight text-foreground">
                 JyotishAI

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -81,12 +82,13 @@ export function SidebarContent({ onNavigate, animate = true }: SidebarContentPro
           className="group flex items-center gap-3"
           onClick={onNavigate}
         >
-          <span
-            className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-lg ring-1 ring-primary/25 transition-all duration-300 group-hover:bg-primary/25 group-hover:ring-primary/40"
-            aria-hidden="true"
-          >
-            🔮
-          </span>
+          <Image
+            src="/logo.png"
+            alt="JyotishAI Logo"
+            width={38}
+            height={38}
+            className="rounded-xl object-contain ring-1 ring-primary/20"
+          />
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">
               JyotishAI

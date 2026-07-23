@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 
@@ -40,9 +41,13 @@ export default function AuthLayout({
             href="/"
             className="group mb-10 flex items-center justify-center gap-3"
           >
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/15 text-xl ring-1 ring-primary/25 transition-all duration-300 group-hover:bg-primary/25">
-              🔮
-            </span>
+            <Image
+              src="/logo.png"
+              alt="JyotishAI Logo"
+              width={44}
+              height={44}
+              className="rounded-2xl object-contain ring-1 ring-primary/20"
+            />
             <span className="text-2xl font-bold tracking-tight text-foreground">
               JyotishAI
             </span>
