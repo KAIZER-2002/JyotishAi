@@ -9,7 +9,8 @@ export function middleware(request: NextRequest) {
     pathname === "/" || 
     pathname.startsWith("/login") || 
     pathname.startsWith("/register") || 
-    pathname.startsWith("/forgot-password");
+    pathname.startsWith("/forgot-password") ||
+    /\.(?:svg|png|jpg|jpeg|gif|webp|ico)$/i.test(pathname);
 
   // Define routes that should only be accessed by unauthenticated users
   const isAuthRoute = 
@@ -37,8 +38,8 @@ export const config = {
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * - static image and favicon assets (.png, .jpg, .svg, .ico, etc.)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };

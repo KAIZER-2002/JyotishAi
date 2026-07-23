@@ -88,6 +88,7 @@ export function SidebarContent({ onNavigate, animate = true }: SidebarContentPro
             width={38}
             height={38}
             className="rounded-xl object-contain ring-1 ring-primary/20"
+            unoptimized
           />
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">

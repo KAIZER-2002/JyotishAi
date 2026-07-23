@@ -55,6 +55,7 @@ export default function Navbar() {
                   height={38}
                   className="rounded-xl object-contain ring-1 ring-primary/20"
                   priority
+                  unoptimized
                 />
                 <span className="text-xl font-bold tracking-tight text-foreground">
                   JyotishAI
