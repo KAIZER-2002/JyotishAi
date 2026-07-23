@@ -1,0 +1,12 @@
+# =============================================================================
+# production.txt — Production-only additions for JyotishAI backend
+# Includes all of base.txt
+# =============================================================================
+-r base.txt
+
+# --- Production WSGI/ASGI server hardening ---
+# uvicorn is already in base.txt; add gunicorn as process manager if scaling
+# gunicorn==22.0.0  # Uncomment if deploying behind gunicorn process manager
+
+# --- No additional production-only packages required at this time ---
+# All runtime dependencies are already captured in base.txt

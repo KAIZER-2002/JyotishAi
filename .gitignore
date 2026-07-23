@@ -1,0 +1,76 @@
+# Caches and temporary folders
+__pycache__/
+.pytest_cache/
+.next/
+.cache/
+.sass-cache/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.turbo/
+out/
+build/
+dist/
+
+# Dependencies
+node_modules/
+jspm_packages/
+web_modules/
+
+# Environments and Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+*.env
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE and Editor configs
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.project
+.classpath
+.settings/
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs and debug files
+logs/
+*.log
+cov*/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local task and walkthrough files
+walkthrough.md
+task.md
+implementation_plan.md
+
+# Backend and DB specific
+.venv/
+venv/
+chroma_db/
+avatars/
+test.db
+coverage/

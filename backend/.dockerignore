@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+.env
+.env.*
+*.db
+*.sqlite
+*.log
+tests/
