@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BirthDataForm from "@/components/astrology/BirthDataForm";
 import BirthSummaryCard from "@/components/astrology/BirthSummaryCard";
@@ -11,6 +11,7 @@ import PlanetPositionCard from "@/components/astrology/PlanetPositionCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBirthChart } from "@/hooks/useBirthChart";
 import { useDivisionalCharts, DivisionalChartType } from "@/hooks/useDivisionalCharts";
+import { useProfile } from "@/hooks/useProfile";
 import { BirthDataFormData } from "@/validations/astrology";
 import { BirthChartRequest, Ayanamsa } from "@/types/astrology";
 import { DashboardCardSkeleton } from "@/components/dashboard/DashboardCardSkeleton";
@@ -22,36 +23,63 @@ export default function ChartPage() {
   const [birthData, setBirthData] = useState<BirthChartRequest | null>(null);
   const [activeTab, setActiveTab] = useState<DivisionalChartType>("D1");
 
-  // Call hooks - they will run only when enabled (i.e. birthData is not null)
-  const { data: d1Data } = useBirthChart(birthData!, !!birthData);
+  const { profile, isLoading: isProfileLoading } = useProfile();
+
+  // Use profile if available, otherwise fallback to custom form state
+  const computedBirthData = useMemo<BirthChartRequest | null>(() => {
+    if (birthData) return birthData;
+    if (profile && profile.date_of_birth && profile.latitude !== null && profile.longitude !== null) {
+      const timeStr = profile.time_of_birth ? profile.time_of_birth.substring(0, 5) : "00:00";
+      const birthDateTime = `${profile.date_of_birth}T${timeStr}:00`;
+      return {
+        date: new Date(birthDateTime).toISOString(),
+        latitude: profile.latitude,
+        longitude: profile.longitude,
+        timezone: profile.timezone || "Asia/Kolkata",
+        ayanamsa: (profile.ayanamsa as Ayanamsa) || "Lahiri",
+        house_system: 1,
+      };
+    }
+    return null;
+  }, [birthData, profile]);
+
+  // Set step based on data availability
+  useEffect(() => {
+    if (computedBirthData && step === "form") {
+      setStep("result");
+    }
+  }, [computedBirthData, step]);
+
+  // Call hooks - they will run only when enabled (i.e. computedBirthData is not null)
+  const { data: d1Data } = useBirthChart(computedBirthData!, !!computedBirthData);
   const {
     data: chartData,
     loading,
     error,
     refetch,
-  } = useDivisionalCharts(birthData!, activeTab, !!birthData);
+  } = useDivisionalCharts(computedBirthData!, activeTab, !!computedBirthData);
 
   // Automatically persist successful chart calculation queries to localStorage history
   useEffect(() => {
-    if (birthData && d1Data) {
+    if (computedBirthData && d1Data) {
       try {
         const historyJson = localStorage.getItem("jyotishai_chart_history") || "[]";
         const history = JSON.parse(historyJson);
         const exists = history.some(
           (h: { date?: string; latitude?: number; longitude?: number }) =>
-            h.date === birthData.date &&
-            h.latitude === birthData.latitude &&
-            h.longitude === birthData.longitude
+            h.date === computedBirthData.date &&
+            h.latitude === computedBirthData.latitude &&
+            h.longitude === computedBirthData.longitude
         );
         if (!exists) {
           const entry = {
             id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
-            date: birthData.date,
-            latitude: birthData.latitude,
-            longitude: birthData.longitude,
-            timezone: birthData.timezone,
-            ayanamsa: birthData.ayanamsa,
-            house_system: birthData.house_system,
+            date: computedBirthData.date,
+            latitude: computedBirthData.latitude,
+            longitude: computedBirthData.longitude,
+            timezone: computedBirthData.timezone,
+            ayanamsa: computedBirthData.ayanamsa,
+            house_system: computedBirthData.house_system,
             created_at: new Date().toISOString(),
           };
           history.unshift(entry);
@@ -61,7 +89,7 @@ export default function ChartPage() {
         console.error("Failed to save chart to history:", e);
       }
     }
-  }, [birthData, d1Data]);
+  }, [computedBirthData, d1Data]);
 
   function handleFormSubmit(_result: unknown, formData: BirthDataFormData) {
     const request: BirthChartRequest = {
@@ -76,10 +104,10 @@ export default function ChartPage() {
     setStep("result");
   }
 
-  const houseSystemLabel = birthData
-    ? birthData.house_system === 1
+  const houseSystemLabel = computedBirthData
+    ? computedBirthData.house_system === 1
       ? "Placidus"
-      : birthData.house_system === 2
+      : computedBirthData.house_system === 2
       ? "Whole Sign"
       : "Equal House"
     : "";
@@ -123,14 +151,14 @@ export default function ChartPage() {
             </button>
           </div>
 
-          {birthData && (
+          {computedBirthData && (
             <div className="grid gap-6 md:grid-cols-3">
               <BirthSummaryCard
-                date={birthData.date}
-                timezone={birthData.timezone}
-                latitude={birthData.latitude}
-                longitude={birthData.longitude}
-                ayanamsa={birthData.ayanamsa}
+                date={computedBirthData.date}
+                timezone={computedBirthData.timezone}
+                latitude={computedBirthData.latitude}
+                longitude={computedBirthData.longitude}
+                ayanamsa={computedBirthData.ayanamsa}
                 houseSystem={houseSystemLabel}
                 className="md:col-span-2"
               />

@@ -98,7 +98,7 @@ class SwissEphemerisService:
         self, 
         julian_day: float, 
         planet_type: PlanetType, 
-        flag: int = swe.FLG_SWIEPH | swe.FLG_SIDEREAL
+        flag: int = swe.FLG_MOSEPH | swe.FLG_SIDEREAL
     ) -> Tuple[float, float, float]:
         """
         Calculates the precise position and speed of a planet.

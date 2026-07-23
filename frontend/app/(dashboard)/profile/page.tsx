@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
+import { LocationAutocomplete } from "@/components/ui/LocationAutocomplete";
 
 // Common timezones for Vedic Astrology calculations
 const TIMEZONES = [
@@ -52,6 +53,8 @@ export default function ProfilePage() {
     handleSubmit,
     control,
     reset,
+    getValues,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -67,6 +70,7 @@ export default function ProfilePage() {
       gender: "",
     },
   });
+
 
   // Load default form values once profile query resolves
   useEffect(() => {
@@ -156,8 +160,8 @@ export default function ProfilePage() {
             name: updated.full_name || authUser.name,
           });
         }
-        // Automatically redirect to dashboard after profile creation/saving is done
-        router.push("/dashboard");
+        toast.success("Profile updated successfully!");
+        // We stay on the profile page instead of redirecting abruptly.
       },
     });
   };
@@ -392,22 +396,16 @@ export default function ProfilePage() {
                 name="timezone"
                 control={control}
                 render={({ field }) => (
-                  <Select
-                    disabled={!isEditMode || isSaving || isUploading}
-                    onValueChange={field.onChange}
-                    value={field.value || undefined}
-                  >
-                    <SelectTrigger id="timezone" className="bg-background/40">
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIMEZONES.map((tz) => (
-                        <SelectItem key={tz} value={tz}>
-                          {tz}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Input
+                      id="timezone"
+                      disabled={!isEditMode || isSaving || isUploading}
+                      placeholder="e.g. Asia/Kolkata"
+                      {...field}
+                      value={field.value || ""}
+                      className="bg-background/40"
+                    />
+                  </div>
                 )}
               />
               {errors.timezone && <p className="text-xs text-destructive">{errors.timezone.message}</p>}
@@ -480,12 +478,27 @@ export default function ProfilePage() {
 
             <div className="space-y-2">
               <Label htmlFor="birth_place">Birth Place</Label>
-              <Input
-                id="birth_place"
-                disabled={!isEditMode || isSaving || isUploading}
-                placeholder="City, Region, Country"
-                {...register("birth_place")}
-                className="bg-background/40"
+              <Controller
+                name="birth_place"
+                control={control}
+                render={({ field }) => (
+                  <LocationAutocomplete
+                    id="birth_place"
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    disabled={!isEditMode || isSaving || isUploading}
+                    placeholder="City, Region, Country"
+                    className="bg-background/40"
+                    onSelectLocation={(data) => {
+                      setValue("birth_place", data.placeName, { shouldDirty: true });
+                      setValue("latitude", data.latitude, { shouldDirty: true });
+                      setValue("longitude", data.longitude, { shouldDirty: true });
+                      if (data.timezone) {
+                        setValue("timezone", data.timezone, { shouldDirty: true });
+                      }
+                    }}
+                  />
+                )}
               />
               {errors.birth_place && <p className="text-xs text-destructive">{errors.birth_place.message}</p>}
             </div>

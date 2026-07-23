@@ -10,3 +10,5 @@ Dockerfile
 *.sqlite
 *.log
 tests/
+venv/
+.venv/

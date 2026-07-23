@@ -7,7 +7,7 @@ from app.db.session import get_db
 from app.db.repositories.conversation_repository import ConversationRepository
 from app.db.repositories.message_repository import MessageRepository
 from app.services.conversation_service import ConversationService, ConversationNotFoundException
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_current_user_optional
 from app.db.models.user import User
 from app.schemas.conversation import (
     ConversationResponseSchema,
@@ -25,20 +25,23 @@ async def get_conversation_service(db: AsyncSession = Depends(get_db)) -> Conver
     return ConversationService(conv_repo, msg_repo)
 
 
+from app.api.deps import get_current_user, get_current_user_optional
+
 @router.get("", response_model=List[ConversationListItemSchema], status_code=status.HTTP_200_OK)
 async def list_conversations(
     limit: int = 20,
     offset: int = 0,
     search: Optional[str] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     conv_service: ConversationService = Depends(get_conversation_service),
 ) -> List[ConversationListItemSchema]:
     """
-    Get paginated conversations for the current authenticated user.
+    Get paginated conversations for the current authenticated user (or guest sessions).
     Can filter by title with optional search term.
     """
+    user_id = current_user.id if current_user else None
     conversations = await conv_service.list_conversations(
-        user_id=current_user.id, limit=limit, offset=offset, search=search
+        user_id=user_id, limit=limit, offset=offset, search=search
     )
     return list(conversations)
 

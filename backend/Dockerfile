@@ -34,8 +34,10 @@ COPY --from=builder /usr/local /usr/local
 # Create non-root group and user
 RUN groupadd -r appuser && useradd -r -g appuser -d /app appuser
 
-# Set up data storage directories with correct ownership
-RUN mkdir -p /app/chroma_db /app/avatars && chown -R appuser:appuser /app
+# Set up data storage directories with correct ownership and pre-download ephemeris files
+RUN mkdir -p /app/chroma_db /app/avatars /usr/local/share/ephe && \
+    python -c "import libephemeris" && \
+    chown -R appuser:appuser /app /usr/local/share/ephe
 
 COPY --chown=appuser:appuser . .
 

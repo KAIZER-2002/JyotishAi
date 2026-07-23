@@ -71,22 +71,22 @@ async def generate_astrology_analysis(
             house_system=request.house_system,
         )
         
-        # Convert the analysis to response format (this will need to be implemented)
-        # For now, we'll return the analysis directly since we're just exposing the service
-        # In a real implementation, we would convert the domain objects to Pydantic models
-        # This is a simplified implementation for now
+        # We need an AstrologyService instance just for its conversion methods
+        from app.services.astrology.astrology_service import AstrologyService
+        from app.schemas.astrology import BirthChartResponse, NavamsaChartResponse, DasamsaChartResponse, ShastiamsaChartResponse, VimshottariDashaResponse
         
-        # Note: In a full implementation, we would need to:
-        # 1. Convert the domain objects (Chart, Mahadasha, etc.) to Pydantic models
-        # 2. Add yoga detection and interpretation analysis
+        # Temporary workaround: instantiate an empty AstrologyService just to use its conversion helpers
+        # (Alternatively we could make those helpers static or extract them)
+        converter = AstrologyService(None, None, None, None, None)
         
         return AstrologyAnalysisResponse(
-            birth_chart=analysis.birth_chart,
-            navamsa_chart=analysis.navamsa_chart,
-            dasamsa_chart=analysis.dasamsa_chart,
-            shastiamsa_chart=analysis.shastiamsa_chart,
-            vimshottari_dashas=analysis.vimshottari_dashas,
-            # These would be populated with actual analysis data in a complete implementation
+            birth_chart=converter._to_chart_response(analysis.birth_chart, BirthChartResponse),
+            navamsa_chart=converter._to_chart_response(analysis.navamsa_chart, NavamsaChartResponse),
+            dasamsa_chart=converter._to_chart_response(analysis.dasamsa_chart, DasamsaChartResponse),
+            shastiamsa_chart=converter._to_chart_response(analysis.shastiamsa_chart, ShastiamsaChartResponse),
+            vimshottari_dashas=VimshottariDashaResponse(
+                mahadashas=[converter._to_mahadasha_response(md) for md in analysis.vimshottari_dashas]
+            ),
             current_mahadasha=None,
             current_antardasha=None,
             detected_yogas=[],

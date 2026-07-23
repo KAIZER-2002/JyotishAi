@@ -183,36 +183,49 @@ class GeminiProvider(LLMProvider, BaseLLMProvider):
 
     def _prepare_payload(self, request: LLMRequest) -> tuple[list[types.Content], Optional[str]]:
         system_instruction = None
-        contents = []
+        raw_messages: list[tuple[str, str]] = []
 
         for msg in request.prompt.messages:
             if msg.role == PromptRole.SYSTEM:
                 system_instruction = msg.content
             else:
                 role = "user" if msg.role == PromptRole.USER else "model"
-                contents.append(
+                if msg.content and msg.content.strip():
+                    raw_messages.append((role, msg.content.strip()))
+
+        if not raw_messages:
+            raise GeminiProviderException("Gemini API request requires at least one user message.")
+
+        # Sanitize role transitions: Merge consecutive messages with the same role
+        sanitized_contents: list[types.Content] = []
+        for role, text in raw_messages:
+            if sanitized_contents and sanitized_contents[-1].role == role:
+                existing_text = sanitized_contents[-1].parts[0].text or ""
+                sanitized_contents[-1].parts = [types.Part(text=f"{existing_text}\n\n{text}")]
+            else:
+                sanitized_contents.append(
                     types.Content(
                         role=role,
-                        parts=[types.Part(text=msg.content)],
+                        parts=[types.Part(text=text)],
                     )
                 )
 
-        if not contents:
+        # Ensure the conversation starts with a 'user' message
+        if sanitized_contents and sanitized_contents[0].role != "user":
+            sanitized_contents.pop(0)
+
+        if not sanitized_contents:
             raise GeminiProviderException("Gemini API request requires at least one user message.")
 
-        return contents, system_instruction
+        return sanitized_contents, system_instruction
 
     def _prepare_config(
         self, request: LLMRequest, system_instruction: Optional[str]
     ) -> types.GenerateContentConfig:
-        timeout = settings.GEMINI_TIMEOUT
-        http_options = types.HttpOptions(timeout=float(timeout)) if timeout else None
-
         return types.GenerateContentConfig(
             system_instruction=system_instruction,
             temperature=request.temperature if request.temperature is not None else None,
             max_output_tokens=request.max_tokens if request.max_tokens is not None else None,
-            http_options=http_options,
         )
 
     def _build_response(
@@ -260,11 +273,15 @@ class GeminiProvider(LLMProvider, BaseLLMProvider):
             text = "".join(parts_text)
 
         usage = None
-        if response.usage_metadata:
+        if getattr(response, "usage_metadata", None):
+            um = response.usage_metadata
+            p_tok = getattr(um, "prompt_token_count", 0) or 0
+            c_tok = getattr(um, "candidates_token_count", 0) or getattr(um, "response_token_count", 0) or 0
+            t_tok = getattr(um, "total_token_count", 0) or (p_tok + c_tok)
             usage = LLMUsage(
-                prompt_tokens=response.usage_metadata.prompt_token_count or 0,
-                completion_tokens=response.usage_metadata.response_token_count or 0,
-                total_tokens=response.usage_metadata.total_token_count or 0,
+                prompt_tokens=p_tok,
+                completion_tokens=c_tok,
+                total_tokens=t_tok,
             )
 
         return LLMResponse(

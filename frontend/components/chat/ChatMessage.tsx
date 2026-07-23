@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import MarkdownRenderer from "./MarkdownRenderer";
 import CopyMessageButton from "./CopyMessageButton";
 import RetryButton from "./RetryButton";
+import TypingIndicator from "./TypingIndicator";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -21,6 +22,7 @@ export default function ChatMessage({
   className,
 }: ChatMessageProps) {
   const isUser = role === "user";
+  const showTypingIndicator = !isUser && isStreaming && content.length === 0;
 
   return (
     <div
@@ -44,11 +46,23 @@ export default function ChatMessage({
 
       {/* Content area */}
       <div className="flex-1 space-y-2 overflow-hidden">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {isUser ? "You" : "Jyotish AI"}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {isUser ? "You" : "Jyotish AI"}
+          </span>
+          {showTypingIndicator && (
+            <span className="text-[11px] font-medium text-amber-400/90 lowercase tracking-normal flex items-center gap-1.5 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 animate-pulse">
+              <span className="size-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
+              astrological analysis in progress...
+            </span>
+          )}
+        </div>
 
-        <MarkdownRenderer content={content} isStreaming={isStreaming} />
+        {showTypingIndicator ? (
+          <TypingIndicator className="my-2" />
+        ) : (
+          <MarkdownRenderer content={content} isStreaming={isStreaming} />
+        )}
 
         {/* Action Buttons */}
         {!isStreaming && content.length > 0 && (

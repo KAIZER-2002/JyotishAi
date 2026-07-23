@@ -60,11 +60,6 @@ export default function HistoryPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
 
-  // Re-fetch conversations when page changes
-  useEffect(() => {
-    refetchConversations();
-  }, [chatPage, refetchConversations]);
-
   // Handle Search Input (simple debouncing or manual trigger)
   const handleChatSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,27 +89,30 @@ export default function HistoryPage() {
   };
 
   // ── Birth Charts & Analyses Local Storage State ────────────────────────────
-  const [localCharts, setLocalCharts] = useState<LocalHistoryEntry[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      return JSON.parse(localStorage.getItem("jyotishai_chart_history") || "[]");
-    } catch {
-      return [];
-    }
-  });
+  const [localCharts, setLocalCharts] = useState<LocalHistoryEntry[]>([]);
   const [chartSearch, setChartSearch] = useState("");
   const [chartPage, setChartPage] = useState(0);
 
-  const [localAnalyses, setLocalAnalyses] = useState<LocalHistoryEntry[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      return JSON.parse(localStorage.getItem("jyotishai_analysis_history") || "[]");
-    } catch {
-      return [];
-    }
-  });
+  const [localAnalyses, setLocalAnalyses] = useState<LocalHistoryEntry[]>([]);
   const [analysisSearch, setAnalysisSearch] = useState("");
   const [analysisPage, setAnalysisPage] = useState(0);
+
+  // Load from localStorage only after mount to prevent hydration mismatch
+  useEffect(() => {
+    try {
+      const charts = JSON.parse(localStorage.getItem("jyotishai_chart_history") || "[]");
+      setLocalCharts(charts);
+    } catch {
+      setLocalCharts([]);
+    }
+    
+    try {
+      const analyses = JSON.parse(localStorage.getItem("jyotishai_analysis_history") || "[]");
+      setLocalAnalyses(analyses);
+    } catch {
+      setLocalAnalyses([]);
+    }
+  }, []);
 
   // Filter & Paginate Local Charts
   const filteredCharts = localCharts.filter((c) => {
@@ -204,10 +202,17 @@ export default function HistoryPage() {
   };
 
   function formatDate(isoStr: string) {
-    return new Date(isoStr).toLocaleDateString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
+    if (!isoStr) return "";
+    try {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return isoStr;
+      return d.toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+    } catch {
+      return isoStr;
+    }
   }
 
   return (

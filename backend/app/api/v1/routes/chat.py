@@ -13,7 +13,7 @@ from app.services.chat_session_service import ChatSessionService
 from app.services.astrology.astrology_chat_service import AstrologyChatService
 from app.exceptions.llm import LLMException, ProviderException
 from app.schemas.chat import ChatRequest, ChatResponse, StreamChunk
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user_optional
 from app.db.models.user import User
 
 router = APIRouter()
@@ -38,7 +38,7 @@ async def get_chat_session_service(db: AsyncSession = Depends(get_db)) -> ChatSe
 async def chat(
     request: ChatRequest,
     chat_session_service: ChatSessionService = Depends(get_chat_session_service),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ) -> ChatResponse:
     """
     Endpoint to receive Swiss Ephemeris data, run yoga calculations,
@@ -116,7 +116,7 @@ async def chat(
 async def chat_stream(
     request: ChatRequest,
     chat_session_service: ChatSessionService = Depends(get_chat_session_service),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ) -> StreamingResponse:
     """
     Streaming astrology chat endpoint.

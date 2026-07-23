@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     # LLM API Keys
     GEMINI_API_KEY: Optional[str] = None
-    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MODEL: str = "gemini-flash-latest"
     GEMINI_EMBEDDING_MODEL: str = "text-embedding-004"
     GEMINI_TIMEOUT: int = 30
     OPENAI_API_KEY: Optional[str] = None

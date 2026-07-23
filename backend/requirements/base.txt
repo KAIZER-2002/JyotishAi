@@ -68,7 +68,7 @@ idna==3.18
 h11==0.16.0
 
 # --- AI / ML Stack ---
-chromadb==1.5.9
+chromadb==0.5.5
 sentence-transformers==5.6.0
 transformers==5.12.1
 torch==2.12.1
@@ -77,8 +77,8 @@ huggingface_hub==1.21.0
 hf-xet==1.5.1
 safetensors==0.8.0
 scikit-learn==1.9.0
-scipy==1.18.0
-numpy==2.5.0
+scipy==1.13.1
+numpy==1.26.4
 onnxruntime==1.27.0
 
 # --- AI / SDK Dependencies ---

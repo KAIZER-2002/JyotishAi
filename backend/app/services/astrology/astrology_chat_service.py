@@ -108,8 +108,9 @@ class AstrologyChatService:
                 role = PromptRole.USER if msg.role == "user" else PromptRole.ASSISTANT
                 combined_messages.append(PromptMessage(role=role, content=msg.content))
                 
-            # Append the current query
-            combined_messages.append(PromptMessage(role=PromptRole.USER, content=user_query))
+            # Append the current query if not already present at the end
+            if not combined_messages or combined_messages[-1].content != user_query:
+                combined_messages.append(PromptMessage(role=PromptRole.USER, content=user_query))
             
             prompt = StructuredPrompt(
                 sections=base_prompt.sections,
@@ -174,7 +175,8 @@ class AstrologyChatService:
             for msg in history[1:]:
                 role = PromptRole.USER if msg.role == "user" else PromptRole.ASSISTANT
                 combined_messages.append(PromptMessage(role=role, content=msg.content))
-            combined_messages.append(PromptMessage(role=PromptRole.USER, content=user_query))
+            if not combined_messages or combined_messages[-1].content != user_query:
+                combined_messages.append(PromptMessage(role=PromptRole.USER, content=user_query))
             prompt = StructuredPrompt(
                 sections=base_prompt.sections,
                 messages=tuple(combined_messages),

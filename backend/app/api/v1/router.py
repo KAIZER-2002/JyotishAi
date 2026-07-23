@@ -14,9 +14,12 @@ api_router.include_router(health_router)
 api_router.include_router(chat_router)
 api_router.include_router(auth_router)
 api_router.include_router(astrology_router)
+from app.api.v1.routes.astrology_analysis import router as astrology_analysis_router
+
 # astrology_analysis_router intentionally excluded from production routing.
 # The /astrology/analysis endpoint is incomplete (see astrology_analysis.py).
 # Re-include once: yoga detection, interpretations, and response serialisation are finished.
+api_router.include_router(astrology_analysis_router)
 api_router.include_router(users_router)
 api_router.include_router(conversations_router)
 api_router.include_router(documents_router)

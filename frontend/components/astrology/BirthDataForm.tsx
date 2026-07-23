@@ -13,6 +13,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 import { birthDataSchema, BirthDataFormData } from "@/validations/astrology";
 import { AstrologyService } from "@/services/astrology";
 import { Ayanamsa, BirthChartRequest, BirthChartResponse } from "@/types/astrology";
+import { LocationAutocomplete } from "@/components/ui/LocationAutocomplete";
 
 interface BirthDataFormProps {
   onSubmit: (data: BirthChartResponse, birthData: BirthDataFormData) => void;
@@ -24,6 +25,7 @@ export default function BirthDataForm({ onSubmit, isLoading }: BirthDataFormProp
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm<BirthDataFormData>({
     resolver: zodResolver(birthDataSchema) as unknown as Resolver<BirthDataFormData>,
@@ -75,6 +77,23 @@ export default function BirthDataForm({ onSubmit, isLoading }: BirthDataFormProp
               className="bg-background/50"
             />
             {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <MapPinIcon size={16} /> Search Birth Place
+            </Label>
+            <LocationAutocomplete
+              placeholder="e.g. London, UK"
+              className="bg-background/50"
+              onSelectLocation={(data) => {
+                setValue("latitude", parseFloat(data.latitude), { shouldValidate: true });
+                setValue("longitude", parseFloat(data.longitude), { shouldValidate: true });
+                if (data.timezone) {
+                  setValue("timezone", data.timezone, { shouldValidate: true });
+                }
+              }}
+            />
           </div>
 
           <div className="space-y-2">

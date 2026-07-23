@@ -495,7 +495,7 @@ export default function DocumentsPage() {
                                     {doc.filename}
                                   </p>
                                   <p className="text-[10px] text-muted-foreground">
-                                    {new Date(doc.created_at).toLocaleDateString(undefined, {
+                                    {new Date(doc.created_at).toLocaleString(undefined, {
                                       dateStyle: "medium",
                                       timeStyle: "short",
                                     })}

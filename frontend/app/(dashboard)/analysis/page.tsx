@@ -16,6 +16,7 @@ import YogaCard from "@/components/astrology/YogaCard";
 import InterpretationCard from "@/components/astrology/InterpretationCard";
 import ScoreProgressCard from "@/components/astrology/ScoreProgressCard";
 import { useAstrologyAnalysis } from "@/hooks/useAstrologyAnalysis";
+import { useProfile } from "@/hooks/useProfile";
 import { Ayanamsa } from "@/types/astrology-api";
 import { DashboardCardSkeleton } from "@/components/dashboard/DashboardCardSkeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -23,14 +24,45 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 function AnalysisPageContent() {
   const searchParams = useSearchParams();
 
-  const requestData = useMemo(() => ({
-    date: searchParams.get("date") || new Date().toISOString(),
-    latitude: parseFloat(searchParams.get("latitude") || "0"),
-    longitude: parseFloat(searchParams.get("longitude") || "0"),
-    timezone: searchParams.get("timezone") || "UTC",
-    ayanamsa: Ayanamsa.LAHIRI,
-    house_system: 1,
-  }), [searchParams]);
+  const { profile } = useProfile();
+
+  const requestData = useMemo(() => {
+    // If URL has search parameters, use those first
+    if (searchParams.has("date")) {
+      return {
+        date: searchParams.get("date") || new Date().toISOString(),
+        latitude: parseFloat(searchParams.get("latitude") || "0"),
+        longitude: parseFloat(searchParams.get("longitude") || "0"),
+        timezone: searchParams.get("timezone") || "UTC",
+        ayanamsa: Ayanamsa.LAHIRI,
+        house_system: 1,
+      };
+    }
+
+    // Otherwise fallback to profile if it has birth data
+    if (profile && profile.date_of_birth && profile.latitude !== null && profile.longitude !== null) {
+      const timeStr = profile.time_of_birth ? profile.time_of_birth.substring(0, 5) : "00:00";
+      const birthDateTime = `${profile.date_of_birth}T${timeStr}:00`;
+      return {
+        date: new Date(birthDateTime).toISOString(),
+        latitude: profile.latitude,
+        longitude: profile.longitude,
+        timezone: profile.timezone || "UTC",
+        ayanamsa: Ayanamsa.LAHIRI,
+        house_system: 1,
+      };
+    }
+
+    // Default fallback
+    return {
+      date: new Date().toISOString(),
+      latitude: 0,
+      longitude: 0,
+      timezone: "UTC",
+      ayanamsa: Ayanamsa.LAHIRI,
+      house_system: 1,
+    };
+  }, [searchParams, profile]);
 
   const { data, isLoading, error } = useAstrologyAnalysis(requestData, true);
 

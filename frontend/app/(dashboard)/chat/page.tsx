@@ -191,12 +191,16 @@ function ChatPageContent() {
   const [isLoadingChart, setIsLoadingChart] = useState(false);
 
   // Load user profile to check if birth details are already saved
-  const { profile, isLoading: isProfileLoading } = useProfile();
+  const { profile, isLoading: isProfileLoading, updateProfile } = useProfile();
 
   const birthData = useMemo<BirthChartRequest | null>(() => {
     if (customBirthData) return customBirthData;
     if (profile && profile.date_of_birth && profile.latitude !== null && profile.longitude !== null) {
-      const birthDateTime = `${profile.date_of_birth}T${profile.time_of_birth || "00:00"}:00`;
+      // Ensure time_of_birth is exactly HH:mm or HH:mm:ss. 
+      // We can take the first 5 characters (HH:mm) and safely append :00
+      const timeStr = profile.time_of_birth ? profile.time_of_birth.substring(0, 5) : "00:00";
+      const birthDateTime = `${profile.date_of_birth}T${timeStr}:00`;
+      
       return {
         date: new Date(birthDateTime).toISOString(),
         latitude: profile.latitude,
@@ -218,6 +222,17 @@ function ChatPageContent() {
       ayanamsa: formData.ayanamsa as Ayanamsa,
       house_system: formData.house_system,
     };
+    
+    // Save to profile automatically so the user doesn't have to enter it again
+    updateProfile({
+      date_of_birth: formData.date.split("T")[0],
+      time_of_birth: formData.date.includes("T") ? formData.date.split("T")[1].substring(0, 5) + ":00" : null,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+      timezone: formData.timezone,
+      ayanamsa: formData.ayanamsa,
+    });
+    
     setIsLoadingChart(false);
     setCustomBirthData(request);
   }
