@@ -124,6 +124,7 @@ class GeminiEmbeddingProvider(EmbeddingProvider):
             return self._client.models.embed_content(
                 model=self.model_name,
                 contents=text,
+                config=types.EmbedContentConfig(output_dimensionality=self.embedding_dimension),
             )
 
         try:
@@ -151,6 +152,7 @@ class GeminiEmbeddingProvider(EmbeddingProvider):
             return await self._client.aio.models.embed_content(
                 model=self.model_name,
                 contents=text,
+                config=types.EmbedContentConfig(output_dimensionality=self.embedding_dimension),
             )
 
         try:
@@ -216,6 +218,7 @@ class GeminiEmbeddingProvider(EmbeddingProvider):
             return self._client.models.embed_content(
                 model=self.model_name,
                 contents=list(texts),
+                config=types.EmbedContentConfig(output_dimensionality=self.embedding_dimension),
             )
 
         try:
@@ -245,6 +248,7 @@ class GeminiEmbeddingProvider(EmbeddingProvider):
             return await self._client.aio.models.embed_content(
                 model=self.model_name,
                 contents=list(texts),
+                config=types.EmbedContentConfig(output_dimensionality=self.embedding_dimension),
             )
 
         try:
