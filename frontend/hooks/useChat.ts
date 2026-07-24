@@ -158,10 +158,11 @@ export function useChat(birthData: BirthChartRequest, initialConversationId?: st
         }
       }
 
+      const finalContent = textContent.trim() || "I apologize, no response was generated. Please try asking your question again.";
       setMessages([
         ...originalMessages,
         userMessage,
-        { role: "assistant", content: textContent, isStreaming: false },
+        { role: "assistant", content: finalContent, isStreaming: false },
       ]);
     } catch (err: unknown) {
       const error = err instanceof Error ? err : new Error("Unknown error");
@@ -175,8 +176,13 @@ export function useChat(birthData: BirthChartRequest, initialConversationId?: st
           return fresh;
         });
       } else {
-        setError(error.message || "Something went wrong.");
-        setMessages(originalMessages);
+        const errorMsg = error.message || "Something went wrong while generating the response.";
+        setError(errorMsg);
+        setMessages([
+          ...originalMessages,
+          userMessage,
+          { role: "assistant", content: `⚠️ **Error**: ${errorMsg}. Please try clicking retry.`, isStreaming: false },
+        ]);
       }
     } finally {
       setIsGenerating(false);
