@@ -92,6 +92,8 @@ const TIME_FORMATS = [
 
 const AI_MODELS = [
   { value: "gemini-flash-latest", label: "Google Gemini Flash (Default & Fast)" },
+  { value: "gemini-2.5-flash", label: "Google Gemini 2.5 Flash" },
+  { value: "gemini-2.0-flash", label: "Google Gemini 2.0 Flash" },
   { value: "openai/gpt-4o-mini", label: "OpenRouter — GPT-4o Mini" },
   { value: "anthropic/claude-3.5-sonnet", label: "OpenRouter — Claude 3.5 Sonnet" },
   { value: "meta-llama/llama-3.3-70b-instruct", label: "OpenRouter — Llama 3.3 70B" },
@@ -375,12 +377,17 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="ai_model">Default Reasoning Model</Label>
                 <Select
-                  value={settings.ai.default_ai_model}
+                  value={
+                    settings?.ai?.default_ai_model &&
+                    AI_MODELS.some((m) => m.value === settings.ai.default_ai_model)
+                      ? settings.ai.default_ai_model
+                      : "gemini-flash-latest"
+                  }
                   onValueChange={(val) => handleUpdate("ai", "default_ai_model", val)}
                   disabled={isSaving}
                 >
                   <SelectTrigger id="ai_model">
-                    <SelectValue />
+                    <SelectValue placeholder="Google Gemini Flash (Default & Fast)" />
                   </SelectTrigger>
                   <SelectContent>
                     {AI_MODELS.map((model) => (
