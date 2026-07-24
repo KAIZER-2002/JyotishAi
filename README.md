@@ -1,233 +1,182 @@
 # JyotishAI
 
-JyotishAI is a production-grade, containerized AI-powered Vedic Astrology application that integrates advanced astrological calculations, life-path interpretation engines, and a Retrieval-Augmented Generation (RAG) scriptures knowledge base.
+JyotishAI is a full-stack web application designed for Vedic astrological calculation, chart interpretation, and context-aware conversation using Retrieval-Augmented Generation (RAG). It combines Swiss Ephemeris astronomical calculations with multi-provider Large Language Models (LLM) and a vector document store.
 
----
+## Features
 
-## 1. Architecture Diagram
+- Astronomical Calculations: Computes planetary positions, house cusps, nakshatras, ayanamsa values (Lahiri, Raman, Krishnamurti, True Chitra), and Vimshottari Dasha periods using Swiss Ephemeris backend bindings.
+- Interactive Chart Rendering: Displays interactive North Indian, South Indian, and East Indian divisional chart layouts (D1 Rashi, D9 Navamsha, D60 Shastiamsa).
+- Conversational RAG Engine: Accepts user document uploads (PDF, DOCX, TXT, Markdown), generates vector embeddings via Google Gemini (`gemini-embedding-001`), indexes chunks into ChromaDB, and performs context retrieval during chat sessions.
+- Multi-Provider LLM Integration: Supports Google Gemini (`gemini-flash-latest`), OpenRouter (GPT-4o Mini, Claude 3.5 Sonnet, Llama 3.3 70B), OpenAI Direct (`gpt-4o-mini`, `gpt-4o`), and Anthropic Direct (`claude-3-5-sonnet-20241022`, `claude-3-haiku-20240307`).
+- User Management: Account registration, JWT authentication, user profile management, historical chat session persistence, and customizable theme settings.
 
-```
-                            +-------------------+
-                            |  Internet Client  |
-                            +-------------------+
-                                      │
-                                      ▼ (Port 80/443)
-                            +-------------------+
-                            |   Nginx Reverse   |
-                            |   Proxy Server    |
-                            +-------------------+
-                               /             \
-             (Routed to /)    /               \ (Routed to /api, /health)
-                             ▼                 ▼
-                 +-----------------+     +-----------------+
-                 |    frontend     |     |     backend     |
-                 | (Next.js Node)  |     | (FastAPI Uvicorn)|
-                 +-----------------+     +-----------------+
-                                                  │
-                                        /─────────┴─────────\
-                                       ▼                     ▼
-                             +-------------------+ +-------------------+
-                             |     postgres      | |      chroma       |
-                             |  (PostgreSQL DB)  | | (Standalone HTTP) |
-                             +-------------------+ +-------------------+
-```
-
----
-
-## 2. Technology Stack
+## Technology Stack
 
 ### Backend
-- **Core Framework**: FastAPI (Python)
-- **Database Engine**: SQLAlchemy 2.0 (Object Relational Mapping)
-- **Schema Migrations**: Alembic
-- **Relational Storage**: PostgreSQL
-- **Vector Database**: Standalone Chroma DB HTTP server
-- **RAG & Embeddings**: Google Gemini API (Text embeddings & LLM chat sessions)
+- Framework: FastAPI (Python 3.12)
+- Database: PostgreSQL 15 with SQLAlchemy 2.0 (asyncpg) and Alembic migrations
+- Ephemeris Engine: Swiss Ephemeris (`libephemeris` Python bindings)
+- Vector Store: ChromaDB
+- Embeddings: Google GenAI (`gemini-embedding-001`) with 768-dimension configuration
+- LLM SDKs: `google-genai`, `openai`, `anthropic`
 
 ### Frontend
-- **Core Framework**: React & Next.js (TypeScript)
-- **Data Fetching**: TanStack React Query (Axios client base)
-- **Styling**: Tailwind CSS v4 & custom glassmorphism components
-- **Transitions**: Framer Motion
-- **Toasts**: Sonner
+- Framework: Next.js 16 (App Router)
+- UI Library: React 19, Tailwind CSS, Radix UI primitives, Lucide React
+- State Management: TanStack React Query v5, Zustand, `next-themes`
 
-### Reverse Proxy & Operations
-- **Reverse Proxy**: Nginx (handling SSL termination, WebSocket upgrades, rate limits, and gzip compression)
-- **Containerization**: Multi-stage Docker & Docker Compose orchestration
+### Infrastructure
+- Containerization: Docker and Docker Compose
+- Reverse Proxy: Nginx
 
----
+## Architecture Overview
 
-## 3. Features
+The system is structured as a client-server web application behind an Nginx reverse proxy. The Next.js frontend handles server-side rendering and client interaction. The FastAPI backend exposes REST API endpoints for authentication, chart generation, document upload, and chat streaming.
 
-### 3.1. Authentication
-- Robust token-based user authentication covering sign-up, sign-in, token refreshes, and reset password templates.
+```
+Client (Browser) -> Nginx Reverse Proxy (Port 80)
+                     ├── / -> Next.js Frontend (Port 3000)
+                     └── /api/v1 -> FastAPI Backend (Port 8000)
+                                     ├── PostgreSQL (Database)
+                                     ├── ChromaDB (Vector Index)
+                                     ├── Swiss Ephemeris (Calculations)
+                                     └── LLM APIs (Gemini, OpenRouter, OpenAI, Anthropic)
+```
 
-### 3.2. AI Chat
-- Context-aware Vedic Astrologer dialogue engine using Gemini API. Fits RAG-retrieved scripture context blocks into the prompt window.
+## Screenshots
 
-### 3.3. Birth Charts
-- Computes planetary coordinate configurations and divisional charts (D1 Rashi, D9 Navamsa, D10 Dasamsa, D60 Shastiamsa) utilizing precise astronomical ephemeris models.
+`[Dashboard Mockup Placeholder]`
+`[Birth Chart Calculation View Placeholder]`
+`[AI Chat and Knowledge Base Placeholder]`
 
-### 3.4. Astrometric Analysis
-- **Vimshottari Dasha**: Computes nested dasha timelines (Maha Dasha, Antar Dasha) from natal Moon positions.
-- **Yoga Detection**: Scans planet placement arrays to identify classic Vedic Yogas (e.g. Budhaditya, Raja, Gaja Kesari, Dhana, and Pancha Mahapurusha configurations).
+## Installation
 
-### 3.5. Knowledge Base (RAG)
-- **Document Ingestion**: Supports PDF, DOCX, TXT, and Markdown files.
-- **DOCX Parser**: Dependency-free parser using standard libraries to safely extract paragraph contents.
-- **Smart Queue Polling**: Web frontend monitors backend task queue statuses with intelligent query polling to update status badges (`pending`, `processing`, `completed`, `failed`).
-- **Vector Cleanup**: Automatically purges document embeddings and chunk index metadata from Chroma DB upon deletion.
+### Prerequisites
 
-### 3.6. History, Profile & Settings
-- **History**: Local storage calculation sheets list and active chat history database tables.
-- **Profile**: Customize user preferences, birth credentials, and profile pictures.
-- **Settings**: Manage application themes (standard default dark mode), keys, and password changes.
+- Node.js 20.0 or higher
+- Python 3.12
+- PostgreSQL 15
+- Docker and Docker Compose (recommended for containerized deployment)
 
----
+### Local Setup
 
-## 4. Installation & Local Development Setup
+1. Clone the repository:
+```bash
+git clone https://github.com/KAIZER-2002/JyotishAi.git
+cd JyotishAi
+```
 
-### 4.1. Prerequisites
-- Python 3.12+ (or UV package manager)
-- Node.js 20+
-- PostgreSQL database instance
-- Google Gemini API key
+2. Setup backend environment:
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/macOS
+pip install -r requirements/base.txt
+```
 
-### 4.2. Environment Variables
+3. Setup frontend environment:
+```bash
+cd ../frontend
+npm install
+```
 
-Create a `.env` file under `backend/` and `frontend/` (see environment configuration templates for defaults):
-- Backend: Refer to [backend/.env.example](file:///c:/Users/Swapnil%20Nandi/Projects/JyotishAI/backend/.env.example) or [.env.production.example](file:///c:/Users/Swapnil%20Nandi/Projects/JyotishAI/.env.production.example).
-- Frontend: Refer to `NEXT_PUBLIC_API_URL`.
+4. Configure environment variables by copying `.env.example` to `.env` in the project root.
 
-### 4.3. Running Locally
+5. Run database migrations:
+```bash
+cd ../backend
+alembic upgrade head
+```
 
-#### 4.3.1. Backend Setup
-1. Navigate to the backend folder:
-   ```bash
-   cd backend
-   ```
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate # On Windows: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Run migrations:
-   ```bash
-   alembic upgrade head
-   ```
-5. Launch the server:
-   ```bash
-   uvicorn app.main:app --reload --port 8000
-   ```
+6. Start local development servers:
+```bash
+# Terminal 1 - Backend
+uvicorn app.main:app --reload --port 8000
 
-#### 4.3.2. Frontend Setup
-1. Navigate to the frontend folder:
-   ```bash
-   cd frontend
-   ```
-2. Install npm dependencies:
-   ```bash
-   npm install
-   ```
-3. Run in development mode:
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+# Terminal 2 - Frontend
+cd frontend
+npm run dev
+```
 
-### 4.4. Running with Docker Compose
+## Docker Deployment
 
-To deploy the entire production stack locally:
-1. Configure environment variables in `.env` inside the workspace root (use `.env.production.example` as a guide).
-2. Spin up the containers:
-   ```bash
-   docker compose up -d --build
-   ```
-3. Apply migrations in the PostgreSQL container:
-   ```bash
-   docker compose run --rm backend alembic upgrade head
-   ```
+To launch the complete stack using Docker Compose:
 
----
+```bash
+docker compose up -d --build
+```
 
-## 5. Project Structure
+The services will be available at:
+- Web Application: `http://localhost`
+- API Base Endpoint: `http://localhost/api/v1`
+- API Health Check: `http://localhost/api/v1/health`
+
+To stop the services:
+```bash
+docker compose down
+```
+
+## Environment Variables
+
+Key variables required in `.env`:
+
+| Variable | Description | Default / Example |
+| :--- | :--- | :--- |
+| `SECRET_KEY` | Secret key for JWT signing | 32-byte hex string |
+| `DATABASE_URL` | PostgreSQL connection URL | `postgresql+asyncpg://user:pass@postgres:5432/jyotishai` |
+| `CHROMA_HOST` | ChromaDB hostname | `chroma` |
+| `CHROMA_PORT` | ChromaDB port | `8000` |
+| `GEMINI_API_KEY` | Google Gemini API Key | `your_gemini_api_key` |
+| `OPENROUTER_API_KEY` | OpenRouter API Key | `your_openrouter_api_key` |
+| `OPENAI_API_KEY` | OpenAI API Key (Optional) | `your_openai_api_key` |
+| `ANTHROPIC_API_KEY` | Anthropic API Key (Optional) | `your_anthropic_api_key` |
+
+See `.env.example` for the full template.
+
+## Project Structure
 
 ```
 JyotishAI/
-├── backend/                   # FastAPI Backend
+├── backend/
 │   ├── app/
-│   │   ├── api/v1/            # API Endpoints (auth, chart, documents, chat)
-│   │   ├── core/              # Config, Security, and Settings
-│   │   ├── db/                # Models & Repositories (Document, User, Session)
-│   │   ├── schemas/           # Pydantic Schemas
-│   │   └── services/          # Business logic & parsers (document_ingestion)
-│   ├── tests/                 # Pytest Suites
-│   └── Dockerfile             # Multi-stage Python build
-├── frontend/                  # Next.js React Frontend
-│   ├── app/                   # App Router Pages
-│   ├── components/            # UI components (dashboard, layouts)
-│   ├── hooks/                 # React Query custom hooks (useDocuments)
-│   ├── services/              # API Client callers (document)
-│   └── Dockerfile             # Standalone optimized Next.js build
-├── nginx/                     # Reverse Proxy Config
-│   ├── nginx.conf             # Upstream servers, gzip, buffering, SSL templates
-│   └── Dockerfile             # Alpine Nginx packager
-├── scripts/                   # Operations automation
-│   ├── deploy.sh              # Pre-flight migrations and service bootstrap
-│   ├── backup.sh              # Database and Chroma DB volume archives
-│   └── restore.sh             # Re-inject dumps to active volumes
-└── docker-compose.yml         # Container Orchestration
+│   │   ├── api/v1/          # REST route handlers
+│   │   ├── core/            # App configuration and security
+│   │   ├── db/              # Database models, sessions, repositories
+│   │   ├── domain/          # Domain interfaces and value objects
+│   │   ├── infrastructure/  # Swiss Ephemeris wrapper services
+│   │   └── services/        # Business logic, RAG, and LLM providers
+│   ├── alembic/             # Migration scripts
+│   └── requirements/        # Dependency specifications
+├── frontend/
+│   ├── app/                 # Next.js App Router pages
+│   ├── components/          # React components
+│   ├── hooks/               # Custom React hooks
+│   ├── services/            # API client layer
+│   └── store/               # Zustand state stores
+├── nginx/                   # Nginx reverse proxy configuration
+├── docker-compose.yml       # Container orchestration spec
+├── README.md
+├── ARCHITECTURE.md
+├── DEPLOYMENT.md
+├── API.md
+├── CONTRIBUTING.md
+├── SECURITY.md
+└── CHANGELOG.md
 ```
 
----
+## Known Limitations
 
-## 6. Testing
+- Direct OpenAI and Anthropic API keys require paid credits active on the respective accounts; otherwise requests fall back to configured Gemini or OpenRouter models.
+- Document processing currently supports plain text, Markdown, PDF, and DOCX files under 10MB.
+- Swiss Ephemeris binary data files download automatically on first initialization if not cached locally.
 
-### Backend Tests
-Ensure your local PostgreSQL/SQLite environment is available, then run:
-```bash
-cd backend
-python -m pytest
-```
+## Roadmap
 
-### Frontend Typecheck & Build
-Compile the application to ensure Next.js build rules are validated:
-```bash
-cd frontend
-npm run build
-```
+- Transit and Ashtakavarga calculation modules.
+- Export of PDF reports for comprehensive chart interpretations.
+- Multi-user organization workspace sharing.
 
----
+## License
 
-## 7. Deployment & Disaster Recovery
-
-Refer to the complete production ops manual at [docs/deployment.md](file:///c:/Users/Swapnil%20Nandi/Projects/JyotishAI/docs/deployment.md) for details on:
-- Automated daily backups (`scripts/backup.sh`)
-- Restoration commands (`scripts/restore.sh`)
-- Post-deployment health verification (`scripts/deploy.sh`)
-- Rollback strategies
-
----
-
-## 8. Security Notes
-
-- **Network Containment**: Ports 5432, 8000 (Chroma), and 8000 (Backend) are locked inside the bridge network `jyotishai_net` and cannot be accessed externally.
-- **Client Body Restriction**: Nginx restricts file uploads at `client_max_body_size 15M` to protect memory allocations.
-- **API Rate Limiting**: The API upstream is throttled at `10r/s` with a burst limit of `20`.
-- **Non-Root Execution**: Backend, frontend, and reverse proxy run under standard unprivileged accounts (`appuser`, `nextjs`, `nginx`).
-
----
-
-## 9. Roadmap
-- **Ollama Offline Models**: Local offline LLM integrations.
-- **Hybrid Search**: Fusing BM25 keyword scans and semantic embeddings in the retrieval pipeline.
-- **Multi-Tenant Partitioning**: Logical tenancy layers for large deployments.
-
----
-
-## 10. License
-Distributed under the MIT License. See LICENSE placeholder for terms.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
