@@ -91,8 +91,14 @@ const TIME_FORMATS = [
 ];
 
 const AI_MODELS = [
-  { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash (Fast & Efficient)" },
-  { value: "gemini-2.5-pro", label: "Gemini 2.5 Pro (Deep Astrological Reasoning)" },
+  { value: "gemini-flash-latest", label: "Google Gemini Flash (Default & Fast)" },
+  { value: "openai/gpt-4o-mini", label: "OpenRouter — GPT-4o Mini" },
+  { value: "anthropic/claude-3.5-sonnet", label: "OpenRouter — Claude 3.5 Sonnet" },
+  { value: "meta-llama/llama-3.3-70b-instruct", label: "OpenRouter — Llama 3.3 70B" },
+  { value: "gpt-4o-mini", label: "OpenAI Direct — GPT-4o Mini" },
+  { value: "gpt-4o", label: "OpenAI Direct — GPT-4o" },
+  { value: "claude-3-5-sonnet-20241022", label: "Anthropic Direct — Claude 3.5 Sonnet" },
+  { value: "claude-3-haiku-20240307", label: "Anthropic Direct — Claude 3 Haiku" },
 ];
 
 const RESPONSE_LENGTHS = [

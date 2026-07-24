@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Palette, Check } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useSettings } from "@/hooks/useSettings";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ const THEMES = [
 
 export function ThemeToggle({ className }: ThemeToggleProps) {
   const { setTheme, theme } = useTheme();
+  const { settings, updateSettings } = useSettings();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -34,6 +36,13 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       setMounted(true);
     });
   }, []);
+
+  const handleSelectTheme = (themeId: string) => {
+    setTheme(themeId);
+    if (settings) {
+      updateSettings({ general: { ...settings.general, theme: themeId } });
+    }
+  };
 
   if (!mounted) {
     return (
@@ -60,7 +69,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
         {THEMES.map((t) => (
           <DropdownMenuItem
             key={t.id}
-            onClick={() => setTheme(t.id)}
+            onClick={() => handleSelectTheme(t.id)}
             className="flex items-center justify-between cursor-pointer py-2 rounded-lg hover:bg-white/5"
           >
             <div className="flex items-center gap-2.5">

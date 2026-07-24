@@ -10,16 +10,24 @@ import { useSettings } from "@/hooks/useSettings";
  */
 export function ThemeSync() {
   const { theme, setTheme } = useTheme();
-  const { settings } = useSettings();
-  const syncedRef = useRef<string | null>(null);
+  const { settings, updateSettings } = useSettings();
+  const initializedRef = useRef(false);
 
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    // Check localStorage first
+    const localTheme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
     const dbTheme = settings?.general?.theme;
-    if (dbTheme && dbTheme !== theme && syncedRef.current !== dbTheme) {
-      syncedRef.current = dbTheme;
+
+    if (localTheme && localTheme !== dbTheme) {
+      // Sync local theme to DB if local user selection exists
+      updateSettings({ general: { ...settings?.general, theme: localTheme } });
+    } else if (!localTheme && dbTheme && dbTheme !== theme) {
       setTheme(dbTheme);
     }
-  }, [settings?.general?.theme, setTheme, theme]);
+  }, [settings, setTheme, theme, updateSettings]);
 
   return null;
 }
