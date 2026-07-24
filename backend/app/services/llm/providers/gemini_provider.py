@@ -63,6 +63,9 @@ class GeminiProvider(LLMProvider, BaseLLMProvider):
         Synchronous completion using the Google Gemini API.
         """
         model = request.model_hint or settings.GEMINI_MODEL
+        if model in ("gemini-2.5-flash", "gemini-2.0-flash", "text-davinci-003"):
+            model = settings.GEMINI_MODEL
+
         contents, system_instruction = self._prepare_payload(request)
         config = self._prepare_config(request, system_instruction)
 
@@ -76,22 +79,38 @@ class GeminiProvider(LLMProvider, BaseLLMProvider):
             latency_ms = int((time.perf_counter() - start_time) * 1000)
             return self._build_response(request, response, model, latency_ms)
 
-        except httpx.TimeoutException as e:
-            raise GeminiProviderException(f"Gemini API request timed out: {str(e)}") from e
-        except (asyncio.TimeoutError, TimeoutError) as e:
-            raise GeminiProviderException(f"Gemini API request timed out: {str(e)}") from e
-        except APIError as e:
-            raise GeminiProviderException(f"Gemini API error occurred: {str(e)}") from e
-        except Exception as e:
-            raise GeminiProviderException(
-                f"An unexpected error occurred while calling Gemini API: {str(e)}"
-            ) from e
+        except Exception as primary_err:
+            if model != settings.GEMINI_MODEL:
+                try:
+                    response = self._client.models.generate_content(
+                        model=settings.GEMINI_MODEL,
+                        contents=contents,
+                        config=config,
+                    )
+                    latency_ms = int((time.perf_counter() - start_time) * 1000)
+                    return self._build_response(request, response, settings.GEMINI_MODEL, latency_ms)
+                except Exception:
+                    pass
+
+            if isinstance(primary_err, httpx.TimeoutException):
+                raise GeminiProviderException(f"Gemini API request timed out: {str(primary_err)}") from primary_err
+            elif isinstance(primary_err, (asyncio.TimeoutError, TimeoutError)):
+                raise GeminiProviderException(f"Gemini API request timed out: {str(primary_err)}") from primary_err
+            elif isinstance(primary_err, APIError):
+                raise GeminiProviderException(f"Gemini API error occurred: {str(primary_err)}") from primary_err
+            else:
+                raise GeminiProviderException(
+                    f"An unexpected error occurred while calling Gemini API: {str(primary_err)}"
+                ) from primary_err
 
     async def acomplete(self, request: LLMRequest) -> LLMResponse:
         """
         Asynchronous completion using the Google Gemini API.
         """
         model = request.model_hint or settings.GEMINI_MODEL
+        if model in ("gemini-2.5-flash", "gemini-2.0-flash", "text-davinci-003"):
+            model = settings.GEMINI_MODEL
+
         contents, system_instruction = self._prepare_payload(request)
         config = self._prepare_config(request, system_instruction)
 
@@ -105,22 +124,39 @@ class GeminiProvider(LLMProvider, BaseLLMProvider):
             latency_ms = int((time.perf_counter() - start_time) * 1000)
             return self._build_response(request, response, model, latency_ms)
 
-        except httpx.TimeoutException as e:
-            raise GeminiProviderException(f"Gemini API request timed out: {str(e)}") from e
-        except (asyncio.TimeoutError, TimeoutError) as e:
-            raise GeminiProviderException(f"Gemini API request timed out: {str(e)}") from e
-        except APIError as e:
-            raise GeminiProviderException(f"Gemini API error occurred: {str(e)}") from e
-        except Exception as e:
-            raise GeminiProviderException(
-                f"An unexpected error occurred while calling Gemini API: {str(e)}"
-            ) from e
+        except Exception as primary_err:
+            if model != settings.GEMINI_MODEL:
+                try:
+                    response = await self._client.aio.models.generate_content(
+                        model=settings.GEMINI_MODEL,
+                        contents=contents,
+                        config=config,
+                    )
+                    latency_ms = int((time.perf_counter() - start_time) * 1000)
+                    return self._build_response(request, response, settings.GEMINI_MODEL, latency_ms)
+                except Exception:
+                    pass
+
+            if isinstance(primary_err, httpx.TimeoutException):
+                raise GeminiProviderException(f"Gemini API request timed out: {str(primary_err)}") from primary_err
+            elif isinstance(primary_err, (asyncio.TimeoutError, TimeoutError)):
+                raise GeminiProviderException(f"Gemini API request timed out: {str(primary_err)}") from primary_err
+            elif isinstance(primary_err, APIError):
+                raise GeminiProviderException(f"Gemini API error occurred: {str(primary_err)}") from primary_err
+            else:
+                raise GeminiProviderException(
+                    f"An unexpected error occurred while calling Gemini API: {str(primary_err)}"
+                ) from primary_err
 
     async def astream(self, request: LLMRequest) -> AsyncGenerator[LLMResponse, None]:
         """
         Asynchronous streaming completion using the Google Gemini API.
         """
         model = request.model_hint or settings.GEMINI_MODEL
+        # Normalize deprecated model names to active working model
+        if model in ("gemini-2.5-flash", "gemini-2.0-flash", "text-davinci-003"):
+            model = settings.GEMINI_MODEL
+
         contents, system_instruction = self._prepare_payload(request)
         config = self._prepare_config(request, system_instruction)
 
@@ -134,16 +170,31 @@ class GeminiProvider(LLMProvider, BaseLLMProvider):
                 latency_ms = int((time.perf_counter() - start_time) * 1000)
                 yield self._build_response(request, response, model, latency_ms)
 
-        except httpx.TimeoutException as e:
-            raise GeminiProviderException(f"Gemini API request timed out: {str(e)}") from e
-        except (asyncio.TimeoutError, TimeoutError) as e:
-            raise GeminiProviderException(f"Gemini API request timed out: {str(e)}") from e
-        except APIError as e:
-            raise GeminiProviderException(f"Gemini API error occurred: {str(e)}") from e
-        except Exception as e:
-            raise GeminiProviderException(
-                f"An unexpected error occurred while calling Gemini API: {str(e)}"
-            ) from e
+        except Exception as primary_err:
+            # Fallback to default GEMINI_MODEL if custom model failed
+            if model != settings.GEMINI_MODEL:
+                try:
+                    async for response in await self._client.aio.models.generate_content_stream(
+                        model=settings.GEMINI_MODEL,
+                        contents=contents,
+                        config=config,
+                    ):
+                        latency_ms = int((time.perf_counter() - start_time) * 1000)
+                        yield self._build_response(request, response, settings.GEMINI_MODEL, latency_ms)
+                    return
+                except Exception:
+                    pass
+
+            if isinstance(primary_err, httpx.TimeoutException):
+                raise GeminiProviderException(f"Gemini API request timed out: {str(primary_err)}") from primary_err
+            elif isinstance(primary_err, (asyncio.TimeoutError, TimeoutError)):
+                raise GeminiProviderException(f"Gemini API request timed out: {str(primary_err)}") from primary_err
+            elif isinstance(primary_err, APIError):
+                raise GeminiProviderException(f"Gemini API error occurred: {str(primary_err)}") from primary_err
+            else:
+                raise GeminiProviderException(
+                    f"An unexpected error occurred while calling Gemini API: {str(primary_err)}"
+                ) from primary_err
 
     async def generate(
         self,
