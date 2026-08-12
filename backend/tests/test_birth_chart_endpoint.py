@@ -16,7 +16,8 @@ sys.modules.setdefault(
     types.SimpleNamespace(
         houses=types.SimpleNamespace(P_PLACIDUS=1),
         FLG_SWIEPH=2,
-        FLG_SIDEREAL=4,
+        FLG_MOSEPH=4,
+        FLG_SIDEREAL=65536,
         SUN=0,
         MOON=1,
         MARS=4,

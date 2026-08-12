@@ -29,10 +29,12 @@ services:
       - chroma_data:/index_data
     networks:
       - jyotishai_net
-    ports:
-      - "8000:8000"
+    # ChromaDB is accessed only internally by the backend via
+    # CHROMA_HOST=chroma and CHROMA_PORT=8000 on the Docker bridge network.
+    # It is intentionally NOT published to the host to avoid a port conflict
+    # with the backend (which needs host port 8000 for direct access).
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/heartbeat || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v2/heartbeat || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,6 +46,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: jyotishai-backend
+    ports:
+      - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-jyotishai}
       CHROMA_HOST: chroma

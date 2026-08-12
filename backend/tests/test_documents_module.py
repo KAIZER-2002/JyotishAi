@@ -20,6 +20,7 @@ from app.services.document_ingestion import DocumentIngestionService, DOCXParser
 from app.services.rag.providers.chroma_vector_store import ChromaVectorStore
 from app.services.rag.retriever import DefaultKnowledgeRetriever
 from app.services.document_service import DocumentService, DocumentAlreadyExistsException, DocumentNotFoundException
+from app.core.config import settings
 
 
 # ---------------------------------------------------------------------------
@@ -67,7 +68,9 @@ async def test_chroma_vector_store():
     # Create a temporary directory for Chroma DB
     temp_dir = tempfile.mkdtemp()
     try:
-        store = ChromaVectorStore(persist_directory=temp_dir, collection_name="test_collection")
+        # Ensure local PersistentClient path is used (not an HTTP server connection)
+        with patch.object(settings, "CHROMA_HOST", None), patch.object(settings, "CHROMA_PORT", None):
+            store = ChromaVectorStore(persist_directory=temp_dir, collection_name="test_collection")
         assert store.store_name == "test_collection"
 
         # Count initially
@@ -120,19 +123,45 @@ async def test_chroma_vector_store():
 # Repository & Service Tests (Async SQLite in-memory DB)
 # ---------------------------------------------------------------------------
 
-TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
-
 @pytest.fixture
 async def async_db():
-    engine = create_async_engine(TEST_DB_URL, echo=False)
-    async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+    # Use a shared in-memory SQLite database (via StaticPool) so that the test
+    # session and the background-task session (which imports the patched
+    # AsyncSessionLocal from app.db.session) see each other's committed writes.
+    from sqlalchemy.pool import StaticPool
+    engine = create_async_engine(
+        "sqlite+aiosqlite://",
+        echo=False,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    async_session = async_sessionmaker(engine, expire_on_commit=True, class_=AsyncSession)
 
     async with engine.begin() as conn:
         # Recreate tables
         await conn.run_sync(Base.metadata.create_all)
 
-    async with async_session() as session:
-        yield session
+    # Patch the production AsyncSessionLocal so that background tasks
+    # (which import it from app.db.session) use this test DB instead of
+    # attempting to connect to the real PostgreSQL database. We make it
+    # return the test session itself so writes are immediately visible.
+    import app.db.session as _db_session
+    _original_asl = _db_session.AsyncSessionLocal
+
+    # The yielded session; the patch below will hand this same session
+    # back so the background task shares the test transaction.
+    _test_session_holder = {}
+
+    def _shared_session_factory():
+        return _test_session_holder["session"]
+
+    _db_session.AsyncSessionLocal = _shared_session_factory
+    try:
+        async with async_session() as session:
+            _test_session_holder["session"] = session
+            yield session
+    finally:
+        _db_session.AsyncSessionLocal = _original_asl
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)

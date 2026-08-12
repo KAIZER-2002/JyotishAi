@@ -19,13 +19,25 @@ sys.modules.setdefault(
     types.SimpleNamespace(
         houses=types.SimpleNamespace(P_PLACIDUS=1),
         FLG_SWIEPH=2,
-        FLG_SIDEREAL=4,
+        FLG_MOSEPH=4,
+        FLG_SIDEREAL=65536,
+        SUN=0,
+        MOON=1,
+        MARS=4,
+        MERCURY=2,
+        JUPITER=5,
+        VENUS=3,
+        SATURN=6,
+        TRUE_NODE=11,
         SIDM_LAHIRI=1,
+        SIDM_RAMAN=3,
+        SIDM_KRISHNAMURTI=5,
+        SIDM_TRUE_CHITRA=27,
     ),
 )
 
 from app.api.v1.routes.conversations import router, get_conversation_service
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_current_user_optional
 from app.db.models.user import User
 from app.db.models.conversation import Conversation
 from app.db.models.message import Message
@@ -53,6 +65,7 @@ def client(mock_user: User, mock_conversation_service: MagicMock) -> TestClient:
     app.include_router(router)
     # Override dependencies
     app.dependency_overrides[get_current_user] = lambda: mock_user
+    app.dependency_overrides[get_current_user_optional] = lambda: mock_user
     app.dependency_overrides[get_conversation_service] = lambda: mock_conversation_service
     with TestClient(app) as test_client:
         yield test_client

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
+from google.genai import types
 from google.genai.errors import APIError
 
 import os
@@ -41,7 +42,7 @@ def test_gemini_embedding_provider_init_success() -> None:
         provider = GeminiEmbeddingProvider()
         assert provider.provider_name == "gemini"
         assert provider.embedding_dimension == 768
-        assert provider.model_name == "text-embedding-004"
+        assert provider.model_name == "gemini-embedding-001"
         assert provider.timeout == 30
 
 
@@ -69,8 +70,9 @@ def test_embed_single_success(mock_client_cls: MagicMock, mock_embedding_respons
 
         assert embedding == [0.1] * 768
         mock_client.models.embed_content.assert_called_once_with(
-            model="text-embedding-004",
+            model="gemini-embedding-001",
             contents="Hello world",
+            config=types.EmbedContentConfig(output_dimensionality=768),
         )
         assert provider.metrics.total_requests == 1
         assert provider.metrics.total_characters == len("Hello world")
@@ -91,8 +93,9 @@ async def test_aembed_single_success(mock_client_cls: MagicMock, mock_embedding_
 
         assert embedding == [0.1] * 768
         mock_client.aio.models.embed_content.assert_called_once_with(
-            model="text-embedding-004",
+            model="gemini-embedding-001",
             contents="Hello async",
+            config=types.EmbedContentConfig(output_dimensionality=768),
         )
         assert provider.metrics.total_requests == 1
         assert provider.metrics.total_characters == len("Hello async")
@@ -132,8 +135,9 @@ def test_embed_batch_success(mock_client_cls: MagicMock) -> None:
         assert embeddings[0] == [0.1] * 768
         assert embeddings[1] == [0.2] * 768
         mock_client.models.embed_content.assert_called_once_with(
-            model="text-embedding-004",
+            model="gemini-embedding-001",
             contents=["text one", "text two"],
+            config=types.EmbedContentConfig(output_dimensionality=768),
         )
         assert provider.metrics.total_requests == 1
         assert provider.metrics.total_characters == len("text one") + len("text two")
@@ -162,8 +166,9 @@ async def test_aembed_batch_success(mock_client_cls: MagicMock) -> None:
         assert len(embeddings) == 1
         assert embeddings[0] == [0.5] * 768
         mock_client.aio.models.embed_content.assert_called_once_with(
-            model="text-embedding-004",
+            model="gemini-embedding-001",
             contents=["async batch"],
+            config=types.EmbedContentConfig(output_dimensionality=768),
         )
 
 

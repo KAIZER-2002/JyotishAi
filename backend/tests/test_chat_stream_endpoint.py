@@ -26,7 +26,8 @@ sys.modules.setdefault(
     types.SimpleNamespace(
         houses=types.SimpleNamespace(P_PLACIDUS=1),
         FLG_SWIEPH=2,
-        FLG_SIDEREAL=4,
+        FLG_MOSEPH=4,
+        FLG_SIDEREAL=65536,
         SUN=0,
         MOON=1,
         MARS=4,
@@ -62,7 +63,7 @@ from app.schemas.astrology import BirthChartRequest
 from app.exceptions.llm import ProviderException, LLMException
 from app.domain.llm_provider import LLMResponse, FinishReason
 from app.api.v1.routes.chat import router, get_chat_session_service
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user_optional
 from app.db.models.user import User
 
 MOCK_USER_ID = uuid4()
@@ -151,7 +152,7 @@ def build_test_app(chat_session_service: ChatSessionService) -> FastAPI:
         return chat_session_service
 
     app.dependency_overrides[get_chat_session_service] = _override_service
-    app.dependency_overrides[get_current_user] = lambda: MOCK_USER
+    app.dependency_overrides[get_current_user_optional] = lambda: MOCK_USER
     
     return app
 

@@ -89,7 +89,7 @@ def test_gemini_provider_complete_success(mock_client_cls: MagicMock) -> None:
 
     mock_response.candidates = [mock_candidate]
     mock_response.usage_metadata.prompt_token_count = 10
-    mock_response.usage_metadata.response_token_count = 20
+    mock_response.usage_metadata.candidates_token_count = 20
     mock_response.usage_metadata.total_token_count = 30
 
     mock_client.models.generate_content.return_value = mock_response
@@ -123,7 +123,7 @@ def test_gemini_provider_complete_success(mock_client_cls: MagicMock) -> None:
         # Verify Client call config/payload matching
         mock_client.models.generate_content.assert_called_once()
         kwargs = mock_client.models.generate_content.call_args[1]
-        assert kwargs["model"] == "gemini-2.0-flash"
+        assert kwargs["model"] == settings.GEMINI_MODEL
         assert len(kwargs["contents"]) == 1
         assert kwargs["contents"][0].role == "user"
         assert kwargs["config"].system_instruction == "System prompt"
@@ -146,7 +146,7 @@ def test_gemini_provider_acomplete_success(mock_client_cls: MagicMock) -> None:
 
     mock_response.candidates = [mock_candidate]
     mock_response.usage_metadata.prompt_token_count = 15
-    mock_response.usage_metadata.response_token_count = 25
+    mock_response.usage_metadata.candidates_token_count = 25
     mock_response.usage_metadata.total_token_count = 40
 
     # Async generate method

@@ -31,4 +31,4 @@ class StreamChunk(BaseModel):
     """A single chunk in a server-sent events streaming response."""
     text: str = Field(..., description="Partial text chunk from the LLM")
     finish_reason: Optional[str] = Field(None, description="Set on the final chunk when streaming ends")
-    conversation_id: Optional[UUID] = Field(None, description="The conversation ID — present on every chunk")
+    conversation_id: Optional[str] = Field(None, description="The conversation ID — present on every chunk")
